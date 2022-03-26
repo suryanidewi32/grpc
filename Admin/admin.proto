@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "dewi.atop/learn/grpc/admin";
+
+package admin;
+
+service DataAdmin {
+    rpc FindAdminByEmail(Admin) returns (Admin);
+}
+
+message Admin {
+    string name = 1;
+    string email = 2;
+}
