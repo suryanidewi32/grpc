@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,8 @@ import (
 
 	pb "dewi.atop/learn/grpc/admin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 )
 
 type dataAdminServer struct {
@@ -48,14 +51,25 @@ func newServer() *dataAdminServer {
 }
 
 func main() {
-	listen, err := net.Listen("tcp", ":1200")
+	cert, err := tls.LoadX509KeyPair("srv.crt", "srv.key")
 	if err != nil {
-		log.Fatalln("error in listen", err.Error())
+		log.Fatal(err)
 	}
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterDataAdminServer(grpcServer, newServer())
+	opts := []grpc.ServerOption{
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
+	}
 
+	listen, err := net.Listen("tcp", ":1200")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer(opts...)
+	pb.RegisterDataAdminServer(grpcServer, newServer())
+	reflection.Register(grpcServer)
+
+	log.Printf("server listening at %v", listen.Addr())
 	if err := grpcServer.Serve(listen); err != nil {
 		log.Fatalln("error when serve grpc", err.Error())
 	}
