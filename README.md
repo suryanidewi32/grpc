@@ -24,5 +24,3 @@
 9. run server
     go run server/main.go
 
-10. Run grpc client
-     grpcurl -d '{"name": "bob"}' localhost:5443 helloworld.Greeter.SayHello
